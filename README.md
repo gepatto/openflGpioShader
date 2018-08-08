@@ -10,6 +10,25 @@ This uniform desaturates the colors from the to textures.
 
 ![](Doc/Pi3008PotPir.jpg)
 
+
+If you need to know how to wire the mcp3008 and the Potentiometer to the Raspberry Pi
+have a look at the following diagram or google for "raspberry pi mcp3008 potentiometer"
+
+![](Doc/MCP3008_pot.jpg)
+
+Here's the way to connect the PIR to GPIO18  
+![](Doc/pi_pir_gpio18.png)
+
+Keyboard Shortcuts:
+- 0 -> toggle calibration of analog0
+- H -> hide debugfield
+- D -> debug file list to commandline
+- F -> toggle between contentFill modes
+- S -> toggle Show FileName
+- SPACE -> restart at first image
+- W -> toggle FPS debug
+
+
 This project uses my 'quick and dirty' hxPiGpio haxe extension.
 [https://github.com/gepatto/hxPiGpio](https://github.com/gepatto/hxPiGpio)
 

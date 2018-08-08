@@ -31,7 +31,10 @@ import Settings;
 import StyleManager;
 
 class Main extends Sprite {
-	
+
+	 public static function min<T:Float>(t:T, t2:T):T { return t < t2 ? t : t2; }
+	 public static function max<T:Float>(t:T, t2:T):T { return t > t2 ? t : t2; }
+
 	var fps:FPS;
 	var bitmap:Bitmap;
 	var pirStatus:ColorRect;
@@ -40,6 +43,7 @@ class Main extends Sprite {
 	var back:BitmapData;
 	var screenRect:Rectangle;
 	var feedbackField:TextField;
+	var debugField:TextField;
 	var fshader:FadeShader;
   	var settings:Settings;
 	var loader:Loader;
@@ -52,8 +56,10 @@ class Main extends Sprite {
 	
 	private static inline var PIR_PIN = 18;
 	var lastPirValue:Int = 0;
-	var lastAnalog:Int = 0;
-
+	var lastAnalog0:Int = 0;
+	var calibrateAnalog0 = false;
+	var analog0Low:Int = 0;
+	var analog0High:Int = 1024;
 	public function new () {
 		
 		super ();
@@ -68,10 +74,21 @@ class Main extends Sprite {
         feedbackField.width = stage.stageWidth - 80;
         feedbackField.height = 64;
         feedbackField.y = stage.stageHeight - feedbackField.height;
-       	feedbackField.defaultTextFormat = StyleManager.defaultFormat;
+       	feedbackField.defaultTextFormat = StyleManager.defaultCenteredFormat;
 		feedbackField.embedFonts = true;
         feedbackField.selectable = false;
         feedbackField.multiline = true;
+
+		debugField = new TextField ();
+        debugField.width = stage.stageWidth - 80;
+        debugField.height = 64;
+        debugField.y = feedbackField.y -  debugField.textHeight - 8;
+		var tf = StyleManager.defaultFormat;
+		tf.size = 18;
+       	debugField.defaultTextFormat = tf;
+		debugField.embedFonts = true;
+        debugField.selectable = false;
+        debugField.multiline = true;
 	
 		pirStatus = new ColorRect(stage.stageWidth,2,0xffffff,.5);
 		pirStatus.y = stage.stageHeight - pirStatus.height;
@@ -96,8 +113,10 @@ class Main extends Sprite {
 		settings = Settings.init();
 		if(settings.loadSuccess){
 			
+			analog0Low = settings.analog0Low;
+			analog0High = settings.analog0High;
 			fps.visible = settings.showFPS;
-			
+
 			listImages(settings.path);
 			if(files.length>0){
 				loadImage(files[0]);
@@ -116,6 +135,8 @@ class Main extends Sprite {
 		
 		addChild(fps);
 		addChild(feedbackField);
+		addChild(debugField);
+
 		addChild(pirStatus);
 		Mouse.hide();
 
@@ -132,14 +153,26 @@ class Main extends Sprite {
 			pirStatus.visible = (pirValue==0);
 		}
 		var analog0 = PiGpio.analogRead(100);
-		if(lastAnalog != analog0){
-			lastAnalog = analog0;
+		var apct:Float;
+		if(lastAnalog0 != analog0){
+			lastAnalog0 = analog0;
+			apct = (lastAnalog0-analog0Low)/(analog0High-analog0Low);
+			
+			if(calibrateAnalog0){
+				analog0Low =  min(analog0Low ,analog0);
+				analog0High = max(analog0High,analog0);
+				debugField.text = ' CALIBRATING analog 0: $analog0 => low:$analog0Low  high:$analog0High pct: $apct';
+			}else{
+				debugField.text = ' NORMALIZED analog0: $apct';
+			}
+			
 			if(fshader!=null){
-				fshader.pct.value = [lastAnalog/1024.0];
+				
+				fshader.pct.value = [apct];
 				bitmap.invalidate();
 			};
 			
-			//feedbackField.text = ' analog 0: $analog0, $tweenValue';
+			
 		}
 		
 	   
@@ -278,11 +311,23 @@ class Main extends Sprite {
 		switch (event.keyCode) {
 			case Keyboard.ESCAPE: 
 				openfl.system.System.exit(0);
+				
+			case Keyboard.NUMBER_0: 
+				calibrateAnalog0 = !calibrateAnalog0;
+				if(calibrateAnalog0){
+					analog0High = 0;
+					analog0Low = 1024;
+				}
+			
+			case Keyboard.H: 
+				debugField.visible = !debugField.visible;
+			
 			case Keyboard.D: 
-				trace(files);
 				feedbackField.text = files.toString();
+			
 			case Keyboard.W: 
 				fps.visible = !fps.visible;
+			
 			case Keyboard.F: 
 				switch(settings.contentFill){
 					case ContentFill.FIT:
@@ -293,8 +338,10 @@ class Main extends Sprite {
 						settings.contentFill = ContentFill.FIT;
 				}
 				feedbackField.text = settings.contentFill;
+			
 			case Keyboard.S: 
 				settings.showFileName = !settings.showFileName;	
+			
 			case Keyboard.SPACE: 
 				tweenDelay.stop();
 				Actuate.stop(this,true);

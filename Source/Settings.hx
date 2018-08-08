@@ -19,6 +19,8 @@ class Settings{
     public var path:String = "./images/";
     public var displayTime:UInt = 5000;
     public var transitionTime:UInt = 2000;
+    public var analog0Low:UInt = 0;
+    public var analog0High:UInt = 0;
     public var showFPS:Bool = false;
     public var showFileName:Bool = false;
     public var contentFill:ContentFill = ContentFill.FILL;
@@ -41,8 +43,10 @@ class Settings{
             if( Reflect.hasField(config, "displayTime" )) displayTime = cast(config.displayTime, UInt);
             if( Reflect.hasField(config, "transitionTime")) transitionTime = cast(config.transitionTime, UInt);
             if( Reflect.hasField(config, "contentFill")) contentFill = cast(config.contentFill.toLowerCase(), ContentFill);
+            if( Reflect.hasField(config, "analog0Low")) analog0Low = cast(config.analog0Low, UInt);
+            if( Reflect.hasField(config, "analog0High")) analog0High = cast(config.analog0High, UInt);
         }
-
+        trace(analog0Low,analog0High);
         #if !html5
         var args = Sys.args();
         if(args.length > 0){

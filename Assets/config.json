@@ -4,5 +4,7 @@
   "transitionTime": 2000,
   "contentFill": "fit",
   "showFPS": false,
-  "showFileName": false
+  "showFileName": false,
+  "analog0Low": 178,
+  "analog0High": 726
 }
